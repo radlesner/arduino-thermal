@@ -88,10 +88,15 @@ void loop() {
 		else if (cfg == 0x20) raw = raw & ~3; // 10 bit res, 187.5 ms
 		else if (cfg == 0x40) raw = raw & ~1; // 11 bit res, 375 ms
 	}
+<<<<<<< HEAD
 
 	celsius = (float)raw / 16.0;
 	fahrenheit = celsius * 1.8 + 32.0;
 
+=======
+	celsius = (float)raw / 16.0;
+	fahrenheit = celsius * 1.8 + 32.0;
+>>>>>>> edd8b2ce8045388c242bb6cee1a5cedf95eb5cbc
 	Serial.print("> Temperature = ");
 	Serial.print(celsius);
 	Serial.print("°C, ");
