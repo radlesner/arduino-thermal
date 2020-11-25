@@ -5,7 +5,7 @@ const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 byte degreeChar [8] = {
-    0b00010,
+	0b00010,
     0b00101,
 	0b00010,
     0b00000,
@@ -25,39 +25,49 @@ void setup() {
 }
 
 void loop() {
-    byte i;
-    byte present = 0;
-    byte type_s;
-    byte data[12];
-    byte addr[8];
-    float celsius, fahrenheit;
+	byte i;
+	byte present = 0;
+	byte type_s;
+	byte data[12];
+	byte addr[8];
+	float celsius, fahrenheit;
 
-    if ( !ds.search(addr)) {
-        ds.reset_search();
-        delay(250);
-        return;
-    }
+	if ( !ds.search(addr)) {
+		Serial.println("No more addresses.");
+		Serial.println();
+		ds.reset_search();
+		delay(250);
+		return;
+  }
 
-    if (OneWire::crc8(addr, 7) != addr[7]) {
-        Serial.println("CRC is not valid!");
-        return;
-    }
+	Serial.print("ROM =");
+	for( i = 0; i < 8; i++) {
+		Serial.write(' ');
+		Serial.print(addr[i], HEX);
+	}
+
+	if (OneWire::crc8(addr, 7) != addr[7]) {
+			Serial.println("CRC is not valid!");
+			return;
+	}
 	Serial.println();
 
-  // the first ROM byte indicates which chip
 	switch (addr[0]) {
-	case 0x10:
-		type_s = 1;
-		break;
-	case 0x28:
-		type_s = 0;
-		break;
-	case 0x22:
-		type_s = 0;
-		break;
-	default:
-		Serial.println("Device is not a DS18x20 family device.");
-		return;
+		case 0x10:
+			Serial.println("  Chip = DS18S20");
+      		type_s = 1;
+      		break;
+		case 0x28:
+			Serial.println("  Chip = DS18B20");
+			type_s = 0;
+			break;
+		case 0x22:
+			Serial.println("  Chip = DS1822");
+			type_s = 0;
+			break;
+		default:
+			Serial.println("Device is not a DS18x20 family device.");
+			return;
 	}
 
 	ds.reset();
@@ -70,38 +80,43 @@ void loop() {
 	ds.select(addr);
 	ds.write(0xBE);
 
+	Serial.print("  Data = ");
+	Serial.print(present, HEX);
+	Serial.print(" ");
+
 	for ( i = 0; i < 9; i++) {
 		data[i] = ds.read();
+		Serial.print(data[i], HEX);
+		Serial.print(" ");
 	}
-
+	Serial.print(" CRC=");
+	Serial.print(OneWire::crc8(data, 8), HEX);
+	Serial.println();
 
 	int16_t raw = (data[1] << 8) | data[0];
 	if (type_s) {
-		raw = raw << 3; // 9 bit resolution default
+		raw = raw << 3;
 		if (data[7] == 0x10) {
-			// "count remain" gives full 12 bit resolution
+
 			raw = (raw & 0xFFF0) + 12 - data[6];
 		}
 	} else {
 		byte cfg = (data[4] & 0x60);
-		if (cfg == 0x00) raw = raw & ~7;	// 9 bit resolution, 93.75 ms
-		else if (cfg == 0x20) raw = raw & ~3; // 10 bit res, 187.5 ms
-		else if (cfg == 0x40) raw = raw & ~1; // 11 bit res, 375 ms
+
+		if (cfg == 0x00) raw = raw & ~7;
+		else if (cfg == 0x20) raw = raw & ~3;
+		else if (cfg == 0x40) raw = raw & ~1;
 	}
-<<<<<<< HEAD
 
 	celsius = (float)raw / 16.0;
 	fahrenheit = celsius * 1.8 + 32.0;
-
-=======
-	celsius = (float)raw / 16.0;
-	fahrenheit = celsius * 1.8 + 32.0;
->>>>>>> edd8b2ce8045388c242bb6cee1a5cedf95eb5cbc
-	Serial.print("> Temperature = ");
+	Serial.print("  Temperature = ");
 	Serial.print(celsius);
-	Serial.print("°C, ");
+	degreeSerialSymbol();
+	Serial.print("C, ");
 	Serial.print(fahrenheit);
-	Serial.print("°F");
+	degreeSerialSymbol();
+	Serial.println("F");
 
 	lcd.setCursor(0, 0);
 	lcd.print("Temp: ");
@@ -114,4 +129,12 @@ void loop() {
 	lcd.print(fahrenheit);
 	lcd.write(byte(0));
 	lcd.print("F");
+}
+
+void degreeSerialSymbol() {
+	if (Serial)
+	{
+		Serial.write(0xC2);
+		Serial.write(0xB0);
+	}
 }
