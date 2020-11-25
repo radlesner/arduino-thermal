@@ -6,22 +6,22 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 byte degreeChar [8] = {
 	0b00010,
-    0b00101,
+	0b00101,
 	0b00010,
-    0b00000,
-    0b00000,
-    0b00000,
-    0b00000,
-    0b00000,
+	0b00000,
+	0b00000,
+	0b00000,
+	0b00000,
+	0b00000,
 };
 
 OneWire  ds(10);
 
 void setup() {
 	Serial.begin(9600);
-    lcd.begin(16, 2);
-    lcd.createChar(0, degreeChar);
-    lcd.setCursor(0, 0);
+	lcd.begin(16, 2);
+	lcd.createChar(0, degreeChar);
+	lcd.setCursor(0, 0);
 }
 
 void loop() {
