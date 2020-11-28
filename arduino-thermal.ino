@@ -17,6 +17,7 @@ byte degreeChar [8] = {
 
 OneWire  ds(10);
 
+//----------------------------------------
 void setup() {
 	Serial.begin(9600);
 	lcd.begin(16, 2);
@@ -25,6 +26,11 @@ void setup() {
 }
 
 void loop() {
+	int16_t rawTemp = tempSensor();
+}
+//----------------------------------------
+
+int16_t tempSensor() {
 	byte i;
 	byte present = 0;
 	byte type_s;
@@ -37,7 +43,7 @@ void loop() {
 		Serial.println();
 		ds.reset_search();
 		delay(250);
-		return;
+		return 0;
   }
 
 	Serial.print("ROM =");
@@ -48,7 +54,7 @@ void loop() {
 
 	if (OneWire::crc8(addr, 7) != addr[7]) {
 			Serial.println("CRC is not valid!");
-			return;
+			return 0;
 	}
 	Serial.println();
 
@@ -67,7 +73,7 @@ void loop() {
 			break;
 		default:
 			Serial.println("Device is not a DS18x20 family device.");
-			return;
+			return 0;
 	}
 
 	ds.reset();
@@ -110,6 +116,7 @@ void loop() {
 
 	celsius = (float)raw / 16.0;
 	fahrenheit = celsius * 1.8 + 32.0;
+
 	Serial.print("  Temperature = ");
 	Serial.print(celsius);
 	degreeSerialSymbol();
@@ -129,6 +136,8 @@ void loop() {
 	lcd.print(fahrenheit);
 	lcd.write(byte(0));
 	lcd.print("F");
+
+	return raw;
 }
 
 void degreeSerialSymbol() {
