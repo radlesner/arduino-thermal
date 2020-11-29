@@ -4,7 +4,7 @@
 //	PWM 3 = LCD Data
 //	PWM 4 = LCD Data
 //	PWM 5 = LCD Data
-//	PWM 7 = Temperature sensor (1Wire bus)
+//	PWM 7 = Temperature sensor (1-Wire bus)
 //	PWM 8 = LCD RS
 //	PWM 9 = LCD E
 //	PWM 10 = Ethernet shield
@@ -51,18 +51,18 @@ void setup() {
 
 	// Check for Ethernet hardware present
 	if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-		Serial.println("Ethernet shield was not found.	Sorry, can't run without hardware. :(");
+		Serial.println("> eth: Ethernet shield was not found. Sorry, can't run without hardware. :(");
 		while (true) {
 			delay(1); // do nothing, no point running without Ethernet hardware
 		}
 		}
 		if (Ethernet.linkStatus() == LinkOFF) {
-		Serial.println("Ethernet cable is not connected.");
+		Serial.println("> eth: Ethernet cable is not connected.");
 	}
 
 	// start the server
 	server.begin();
-	Serial.print("server is at ");
+	Serial.print("> eth: server is at ");
 	Serial.println(Ethernet.localIP());
 }
 
@@ -76,7 +76,7 @@ void loop() {
 
 	EthernetClient client = server.available();
 	if (client) {
-		Serial.println("new client");
+		Serial.println("> eth: new client");
 		// an http request ends with a blank line
 		boolean currentLineIsBlank = true;
 		while (client.connected()) {
@@ -120,7 +120,7 @@ void loop() {
 		delay(1);
 		// close the connection:
 		client.stop();
-		Serial.println("client disconnected");
+		Serial.println("> eth: client disconnected");
 	}
 }
 
@@ -133,40 +133,40 @@ int16_t tempSensor() {
 	float celsius, fahrenheit;
 
 	if ( !ds.search(addr)) {
-		Serial.println("No more addresses.");
+		Serial.println("> temp: No more addresses.");
 		Serial.println();
 		ds.reset_search();
 		delay(250);
 		return 0;
 	}
 
-	Serial.print("ROM =");
+	Serial.print("> temp: ROM =");
 	for( i = 0; i < 8; i++) {
 		Serial.write(' ');
 		Serial.print(addr[i], HEX);
 	}
 
 	if (OneWire::crc8(addr, 7) != addr[7]) {
-			Serial.println("CRC is not valid!");
+			Serial.println("> temp: CRC is not valid!");
 			return 0;
 	}
 	Serial.println();
 
 	switch (addr[0]) {
 		case 0x10:
-			Serial.println("  Chip = DS18S20");
+			Serial.println("> temp: Chip = DS18S20");
 				type_s = 1;
 				break;
 		case 0x28:
-			Serial.println("  Chip = DS18B20");
+			Serial.println("> temp: Chip = DS18B20");
 			type_s = 0;
 			break;
 		case 0x22:
-			Serial.println("  Chip = DS1822");
+			Serial.println("> temp: Chip = DS1822");
 			type_s = 0;
 			break;
 		default:
-			Serial.println("Device is not a DS18x20 family device.");
+			Serial.println("> temp: Device is not a DS18x20 family device.");
 			return 0;
 	}
 
@@ -180,7 +180,7 @@ int16_t tempSensor() {
 	ds.select(addr);
 	ds.write(0xBE);
 
-	Serial.print("  Data = ");
+	Serial.print("> temp: Data = ");
 	Serial.print(present, HEX);
 	Serial.print(" ");
 
@@ -189,7 +189,7 @@ int16_t tempSensor() {
 		Serial.print(data[i], HEX);
 		Serial.print(" ");
 	}
-	Serial.print(" CRC=");
+	Serial.print("> temp: CRC=");
 	Serial.print(OneWire::crc8(data, 8), HEX);
 	Serial.println();
 
@@ -211,7 +211,7 @@ int16_t tempSensor() {
 	celsius = tempConvertCelsius((float)raw);
 	fahrenheit = tempConvertFahrenheit((float)raw);
 
-	Serial.print("  Temperature = ");
+	Serial.print("> temp: Temperature = ");
 	Serial.print(celsius);
 	degreeSerialSymbol();
 	Serial.print("C, ");
