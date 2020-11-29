@@ -1,7 +1,27 @@
+//	Used pins:
+
+//	PWM 2 = LCD Data
+//	PWM 3 = LCD Data
+//	PWM 4 = LCD Data
+//	PWM 5 = LCD Data
+//	PWM 7 = Temperature sensor (1Wire bus)
+//	PWM 8 = LCD RS
+//	PWM 9 = LCD E
+//  PWM 10 = Ethernet shield
+//  PWM 11 = Ethernet shield
+//  PWM 12 = Ethernet shield
+//  PWM 13 = Ethernet shield
+
 #include <LiquidCrystal.h>
 #include <OneWire.h>
+#include <SPI.h>
+#include <Ethernet.h>
 
-const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+IPAddress ip(172, 31, 227, 18);
+EthernetServer server(80);
+
+const int rs = 9, en = 8, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 byte degreeChar [8] = {
@@ -15,20 +35,96 @@ byte degreeChar [8] = {
 	0b00000,
 };
 
-OneWire  ds(10);
+OneWire  ds(7);
 
-//----------------------------------------
+//---------------------------------------- SETUP ----------------------------------------
 void setup() {
 	Serial.begin(9600);
 	lcd.begin(16, 2);
 	lcd.createChar(0, degreeChar);
 	lcd.setCursor(0, 0);
+
+	while (!Serial) {
+	; // wait for serial port to connect. Needed for native USB port only
+	}
+
+	// start the Ethernet connection and the server:
+	Ethernet.begin(mac, ip);
+
+	// Check for Ethernet hardware present
+	if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+		Serial.println("Ethernet shield was not found.	Sorry, can't run without hardware. :(");
+		while (true) {
+			delay(1); // do nothing, no point running without Ethernet hardware
+		}
+		}
+		if (Ethernet.linkStatus() == LinkOFF) {
+		Serial.println("Ethernet cable is not connected.");
+	}
+
+	// start the server
+	server.begin();
+	Serial.print("server is at ");
+	Serial.println(Ethernet.localIP());
 }
 
+//---------------------------------------- LOOP ----------------------------------------
 void loop() {
+	float celsius, fahrenheit;
 	int16_t rawTemp = tempSensor();
+
+	celsius = tempConvertCelsius((float)rawTemp);
+	fahrenheit = tempConvertFahrenheit((float)rawTemp);
+
+	EthernetClient client = server.available();
+	if (client) {
+		Serial.println("new client");
+		// an http request ends with a blank line
+		boolean currentLineIsBlank = true;
+		while (client.connected()) {
+			if (client.available()) {
+				char c = client.read();
+				Serial.write(c);
+				// if you've gotten to the end of the line (received a newline
+				// character) and the line is blank, the http request has ended,
+				// so you can send a reply
+				if (c == '\n' && currentLineIsBlank) {
+					// send a standard http response header
+					client.println("HTTP/1.1 200 OK");
+					client.println("Content-Type: text/html");
+					client.println("Connection: close");	// the connection will be closed after completion of the response
+					client.println("Refresh: 5");	// refresh the page automatically every 5 sec
+					client.println();
+					client.println("<!DOCTYPE HTML>");
+					client.println("<html>");
+
+					client.print("Temperature: ");
+					client.print(celsius);
+					client.println("&#x2103; <br>");
+
+					client.print("Temperature: ");
+					client.print(fahrenheit);
+					client.println("&#x2109;");
+
+					client.println("</html>");
+					break;
+				}
+				if (c == '\n') {
+					// you're starting a new line
+					currentLineIsBlank = true;
+				} else if (c != '\r') {
+					// you've gotten a character on the current line
+					currentLineIsBlank = false;
+				}
+			}
+		}
+		// give the web browser time to receive the data
+		delay(1);
+		// close the connection:
+		client.stop();
+		Serial.println("client disconnected");
+	}
 }
-//----------------------------------------
 
 int16_t tempSensor() {
 	byte i;
@@ -44,7 +140,7 @@ int16_t tempSensor() {
 		ds.reset_search();
 		delay(250);
 		return 0;
-  }
+	}
 
 	Serial.print("ROM =");
 	for( i = 0; i < 8; i++) {
@@ -61,8 +157,8 @@ int16_t tempSensor() {
 	switch (addr[0]) {
 		case 0x10:
 			Serial.println("  Chip = DS18S20");
-      		type_s = 1;
-      		break;
+	  		type_s = 1;
+	  		break;
 		case 0x28:
 			Serial.println("  Chip = DS18B20");
 			type_s = 0;
@@ -114,8 +210,8 @@ int16_t tempSensor() {
 		else if (cfg == 0x40) raw = raw & ~1;
 	}
 
-	celsius = (float)raw / 16.0;
-	fahrenheit = celsius * 1.8 + 32.0;
+	celsius = tempConvertCelsius((float)raw);
+	fahrenheit = tempConvertFahrenheit((float)raw);
 
 	Serial.print("  Temperature = ");
 	Serial.print(celsius);
@@ -146,4 +242,17 @@ void degreeSerialSymbol() {
 		Serial.write(0xC2);
 		Serial.write(0xB0);
 	}
+}
+
+float tempConvertCelsius(int16_t rawTemp) {
+	float tempCelsius = (float)rawTemp / 16.0;
+	return tempCelsius;
+}
+
+float tempConvertFahrenheit(int16_t rawTemp) {
+	float tempCelsius, tempFahrenheit;
+
+	tempCelsius = (float)rawTemp / 16.0;
+	tempFahrenheit = tempCelsius * 1.8 + 32.0;
+	return tempFahrenheit;
 }

@@ -2,5 +2,7 @@
     "files.associations": {
         "*.sql": "sql",
         "*.tcc": "cpp"
-    }
+    },
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2
 }
