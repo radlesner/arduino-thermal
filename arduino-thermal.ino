@@ -7,10 +7,10 @@
 //	PWM 7 = Temperature sensor (1Wire bus)
 //	PWM 8 = LCD RS
 //	PWM 9 = LCD E
-//  PWM 10 = Ethernet shield
-//  PWM 11 = Ethernet shield
-//  PWM 12 = Ethernet shield
-//  PWM 13 = Ethernet shield
+//	PWM 10 = Ethernet shield
+//	PWM 11 = Ethernet shield
+//	PWM 12 = Ethernet shield
+//	PWM 13 = Ethernet shield
 
 #include <LiquidCrystal.h>
 #include <OneWire.h>
@@ -35,7 +35,7 @@ byte degreeChar [8] = {
 	0b00000,
 };
 
-OneWire  ds(7);
+OneWire ds(7);
 
 //---------------------------------------- SETUP ----------------------------------------
 void setup() {
@@ -44,9 +44,7 @@ void setup() {
 	lcd.createChar(0, degreeChar);
 	lcd.setCursor(0, 0);
 
-	while (!Serial) {
-	; // wait for serial port to connect. Needed for native USB port only
-	}
+	while (!Serial) {}// wait for serial port to connect. Needed for native USB port only
 
 	// start the Ethernet connection and the server:
 	Ethernet.begin(mac, ip);
@@ -157,8 +155,8 @@ int16_t tempSensor() {
 	switch (addr[0]) {
 		case 0x10:
 			Serial.println("  Chip = DS18S20");
-	  		type_s = 1;
-	  		break;
+				type_s = 1;
+				break;
 		case 0x28:
 			Serial.println("  Chip = DS18B20");
 			type_s = 0;
