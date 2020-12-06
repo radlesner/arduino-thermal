@@ -4,7 +4,7 @@
 //	PWM 3 = LCD Data (D6)
 //	PWM 4 = LCD Data (D5)
 //	PWM 5 = LCD Data (D4)
-//	PWM 7 = DQ (Temperature sensor)
+//	PWM 7 = DQ
 //	PWM 8 = LCD RS
 //	PWM 9 = LCD E
 //	PWM 10 = Ethernet shield
