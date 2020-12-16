@@ -4,5 +4,6 @@
         "*.tcc": "cpp"
     },
     "editor.insertSpaces": true,
-    "editor.tabSize": 2
+    "editor.tabSize": 2,
+    "C_Cpp.intelliSenseEngine": "Tag Parser"
 }

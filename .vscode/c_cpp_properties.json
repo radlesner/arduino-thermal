@@ -3,10 +3,10 @@
         {
             "name": "Linux",
             "includePath": [
-                "/home/krupier/.arduino-1.8.13/tools/**",
-                "/home/krupier/.arduino-1.8.13/hardware/arduino/avr/**",
-                "/home/krupier/.arduino-1.8.13/libraries/**",
-                "/home/krupier/Arduino/libraries/**"
+                "/home/krupier/.arduino-1.8.13/tools/",
+                "/home/krupier/.arduino-1.8.13/hardware/arduino/avr/",
+                "/home/krupier/.arduino-1.8.13/libraries/",
+                "/home/krupier/Arduino/libraries/"
             ],
             "forcedInclude": [
                 "/home/krupier/.arduino-1.8.13/hardware/arduino/avr/cores/arduino/Arduino.h"
