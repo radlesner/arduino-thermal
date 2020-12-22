@@ -3,6 +3,11 @@
         {
             "name": "Linux",
             "includePath": [
+                "/home/krupier/.arduino-1.8.13/tools/**",
+                "/home/krupier/Arduino/libraries/**",
+                "/home/krupier/.arduino-1.8.13/libraries/**",
+                "/home/krupier/.arduino-1.8.13/hardware/tools/**",
+                "/home/krupier/.arduino-1.8.13/hardware/arduino/avr/**",
                 "/home/krupier/.arduino-1.8.13/tools/",
                 "/home/krupier/.arduino-1.8.13/hardware/arduino/avr/",
                 "/home/krupier/.arduino-1.8.13/libraries/",
@@ -14,7 +19,10 @@
             "intelliSenseMode": "gcc-x64",
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu17",
-            "cppStandard": "gnu++14"
+            "cppStandard": "gnu++14",
+            "defines": [
+                "USBCON"
+            ]
         }
     ],
     "version": 4
