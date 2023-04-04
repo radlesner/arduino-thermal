@@ -1,27 +1,27 @@
-//	Used pins:
-
-//	PWM 2 = LCD Data (D7)
-//	PWM 3 = LCD Data (D6)
-//	PWM 4 = LCD Data (D5)
-//	PWM 5 = LCD Data (D4)
-//	PWM 7 = DQ
-//	PWM 8 = LCD RS
-//	PWM 9 = LCD E
-//	PWM 10 = Ethernet shield
-//	PWM 11 = Ethernet shield
-//	PWM 12 = Ethernet shield
-//	PWM 13 = Ethernet shield
+/*
+	Used pins for Arduino Nano and Uno:
+		D8 = LCD RS
+		D9 = LCD E
+		D5 = LCD Data (D4)
+		D4 = LCD Data (D5)
+		D3 = LCD Data (D6)
+		D2 = LCD Data (D7)
+		D7 = Temperature sensor pin
+*/
 
 #include <LiquidCrystal.h>
 #include <OneWire.h>
-#include <SPI.h>
-#include <Ethernet.h>
 
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-IPAddress ip(172, 31, 227, 18);
-EthernetServer server(80);
+#define VERSION "v0.1"
 
-const int rs = 9, en = 8, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+const int rs = 8,
+					en = 6,
+					d4 = 5,
+					d5 = 4,
+					d6 = 3,
+					d7 = 2,
+					tempSensorPin = 9;
+
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 byte degreeChar [8] = {
@@ -35,111 +35,70 @@ byte degreeChar [8] = {
 	0b00000,
 };
 
-OneWire ds(7);
+OneWire ds(tempSensorPin);
 
-//---------------------------------------- SETUP ----------------------------------------
+void degreeSerialSymbol() {
+	if (Serial)
+	{
+		Serial.write(0xC2);
+		Serial.write(0xB0);
+	}
+}
+
+float tempConvertCelsius(float rawTemp) {
+	float tempCelsius = rawTemp / 16.0;
+	return tempCelsius;
+}
+
+float tempConvertFahrenheit(float rawTemp) {
+	float tempCelsius, tempFahrenheit;
+
+	tempCelsius = rawTemp / 16.0;
+	tempFahrenheit = tempCelsius * 1.8 + 32.0;
+	return tempFahrenheit;
+}
+
+// ------------------------------------- MAIN -------------------------------------
+
 void setup() {
-	Serial.begin(9600);
+  Serial.begin(9600);
+
 	lcd.begin(16, 2);
 	lcd.createChar(0, degreeChar);
 	lcd.setCursor(0, 0);
 
-	while (!Serial) {}
-
-	Ethernet.begin(mac, ip);
-
-	if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-		Serial.println("> eth: Ethernet shield was not found. Sorry, can't run without hardware. :(");
-		while (true) {
-			delay(1);
-		}
-	}
-	if (Ethernet.linkStatus() == LinkOFF) {
-		Serial.println("> eth: Ethernet cable is not connected.");
-	}
-
-	server.begin();
-	Serial.print("> eth: server is at ");
-	Serial.println(Ethernet.localIP());
+	lcd.print("arduino-thermal");
+	lcd.setCursor(0, 1);
+	lcd.print(VERSION);
+	delay(2000);
+	lcd.clear();
 }
 
-//---------------------------------------- LOOP ----------------------------------------
+
 void loop() {
-	float celsius, fahrenheit;
-	int16_t rawTemp = tempSensor();
-
-	celsius = tempConvertCelsius((float)rawTemp);
-	fahrenheit = tempConvertFahrenheit((float)rawTemp);
-
-	EthernetClient client = server.available();
-	if (client) {
-		Serial.println("> eth: new client");
-
-		boolean currentLineIsBlank = true;
-		while (client.connected()) {
-			if (client.available()) {
-				char c = client.read();
-				Serial.write(c);
-
-				if (c == '\n' && currentLineIsBlank) {
-					client.println("HTTP/1.1 200 OK");
-					client.println("Content-Type: text/html");
-					client.println("Connection: close");
-					client.println("Refresh: 5");
-					client.println();
-					client.println("<!DOCTYPE HTML>");
-					client.println("<html>");
-
-					client.print("Temperature: ");
-					client.print(celsius);
-					client.println("&#x2103; <br>");
-
-					client.print("Temperature: ");
-					client.print(fahrenheit);
-					client.println("&#x2109;");
-
-					client.println("</html>");
-					break;
-				}
-				if (c == '\n') {
-					currentLineIsBlank = true;
-				} else if (c != '\r') {
-					currentLineIsBlank = false;
-				}
-			}
-		}
-		delay(1);
-
-		client.stop();
-		Serial.println("> eth: client disconnected");
-	}
-}
-
-int16_t tempSensor() {
-	byte i;
 	byte present = 0;
 	byte type_s;
 	byte data[12];
 	byte addr[8];
 	float celsius, fahrenheit;
 
-	if ( !ds.search(addr)) {
+	if (!ds.search(addr)) {
 		Serial.println("> temp: No more addresses.");
 		Serial.println();
 		ds.reset_search();
 		delay(250);
-		return 0;
+		return ;
 	}
 
 	Serial.print("> temp: ROM =");
-	for( i = 0; i < 8; i++) {
+	for(byte i = 0; i < 8; i++) {
 		Serial.write(' ');
 		Serial.print(addr[i], HEX);
 	}
 
 	if (OneWire::crc8(addr, 7) != addr[7]) {
 			Serial.println("> temp: CRC is not valid!");
-			return 0;
+			return ;
 	}
 	Serial.println();
 
@@ -158,7 +117,7 @@ int16_t tempSensor() {
 			break;
 		default:
 			Serial.println("> temp: Device is not a DS18x20 family device.");
-			return 0;
+			return ;
 	}
 
 	ds.reset();
@@ -175,7 +134,7 @@ int16_t tempSensor() {
 	Serial.print(present, HEX);
 	Serial.print(" ");
 
-	for ( i = 0; i < 9; i++) {
+	for (byte i = 0; i < 9; i++) {
 		data[i] = ds.read();
 		Serial.print(data[i], HEX);
 		Serial.print(" ");
@@ -199,8 +158,8 @@ int16_t tempSensor() {
 		else if (cfg == 0x40) raw = raw & ~1;
 	}
 
-	celsius = tempConvertCelsius((float)raw);
-	fahrenheit = tempConvertFahrenheit((float)raw);
+	celsius = tempConvertCelsius(static_cast<float>(raw));
+	fahrenheit = tempConvertFahrenheit(static_cast<float>(raw));
 
 	Serial.print("> temp: Temperature = ");
 	Serial.print(celsius);
@@ -221,27 +180,4 @@ int16_t tempSensor() {
 	lcd.print(fahrenheit);
 	lcd.write(byte(0));
 	lcd.print("F");
-
-	return raw;
-}
-
-void degreeSerialSymbol() {
-	if (Serial)
-	{
-		Serial.write(0xC2);
-		Serial.write(0xB0);
-	}
-}
-
-float tempConvertCelsius(int16_t rawTemp) {
-	float tempCelsius = (float)rawTemp / 16.0;
-	return tempCelsius;
-}
-
-float tempConvertFahrenheit(int16_t rawTemp) {
-	float tempCelsius, tempFahrenheit;
-
-	tempCelsius = (float)rawTemp / 16.0;
-	tempFahrenheit = tempCelsius * 1.8 + 32.0;
-	return tempFahrenheit;
 }

@@ -1,7 +1,20 @@
 {
     "files.associations": {
         "*.sql": "sql",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "array": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "ranges": "cpp",
+        "cstddef": "cpp",
+        "hash_map": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "vector": "cpp",
+        "initializer_list": "cpp",
+        "valarray": "cpp"
     },
     "editor.insertSpaces": true,
     "editor.tabSize": 2,

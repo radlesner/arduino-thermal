@@ -1,8 +1,8 @@
 {
-    "port": "/dev/ttyUSB0",
-    "board": "arduino:avr:mega",
+    "port": "/dev/ttyACM0",
+    "board": "arduino:megaavr:nona4809",
     "programmer": "AVRISP mkII",
     "sketch": "arduino-thermal.ino",
     "output": "build",
-    "configuration": "cpu=atmega2560"
+    "configuration": "mode=on"
 }
