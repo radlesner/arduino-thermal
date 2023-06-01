@@ -14,7 +14,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-#define VERSION "v0.2"
+#define VERSION "button-feature"
 
 const int
 	lcdButtonPin = 10,

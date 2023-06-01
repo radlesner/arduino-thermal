@@ -2,7 +2,5 @@
     "port": "/dev/ttyACM0",
     "board": "arduino:megaavr:nona4809",
     "programmer": "AVRISP mkII",
-    "sketch": "arduino-thermal.ino",
-    "output": "build",
-    "configuration": "mode=on"
+    "sketch": "arduino-thermal.ino"
 }
