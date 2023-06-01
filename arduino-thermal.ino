@@ -17,17 +17,23 @@
 #define VERSION "v0.2"
 
 const int
+	lcdButtonPin = 10,
+	tempSensorPin = 9,
 	rs = 8,
 	en = 6,
 	d4 = 5,
 	d5 = 4,
 	d6 = 3,
-	d7 = 2,
-	tempSensorPin = 9;
+	d7 = 2;
 
-int sensorCount = 0;
+int
+	sensorCount = 0,
+	lcdButtonState = 0,
+	lcdButtonLastState = 0,
+	lcdButtonIndex = 0,
+	tempIndex = 0;
 
-float tempC;
+float	tempBuffer[8] = { 0, 0, 0, 0, 0, 0, 0, 0, };
 
 OneWire oneWire(tempSensorPin);
 DallasTemperature sensors(&oneWire);
@@ -56,6 +62,8 @@ void degreeSerialSymbol() {
 
 void setup()
 {
+	pinMode(lcdButtonPin, INPUT_PULLUP);
+
 	// ----- Serial settings -----
   sensors.begin();
   Serial.begin(9600);
@@ -90,27 +98,78 @@ void setup()
 
 void loop()
 {
+	lcdButtonState = digitalRead(lcdButtonPin);
   sensors.requestTemperatures();
 
   for (int i = 0;  i < sensorCount;  i++)
   {
+		tempBuffer[i] = sensors.getTempCByIndex(i);
+
 		// Serial temperature output
     Serial.print("Sensor ");
     Serial.print(i + 1);
     Serial.print(": ");
-    tempC = sensors.getTempCByIndex(i);
-    Serial.print(tempC);
+    Serial.print(tempBuffer[i]);
 		Serial.print(" ");
     degreeSerialSymbol();
     Serial.println("C");
 
 		// LCD temperature output
-		lcd.setCursor(4, i);
-		lcd.print(tempC);
-		lcd.write(byte(0));
-		lcd.print("C");
+		// lcd.setCursor(4, i);
+		// lcd.print(tempBuffer[i]);
+		// lcd.write(byte(0));
+		// lcd.print("C");
   }
 
+	if (lcdButtonState != lcdButtonLastState)
+	{
+		if (lcdButtonState == LOW)
+		{
+			tempIndex = (tempIndex + 1) % 4;
+
+			lcd.clear();
+			// lcd.setCursor(0, 0);
+			// lcd.print(tempIndex);
+
+			if (tempIndex == 0)
+			{
+				lcd.setCursor(0, 0);
+				lcd.print("T1: ---");
+				lcd.print(tempBuffer[0]);
+				lcd.setCursor(0, 1);
+				lcd.print("T2: ---");
+			} else if (tempIndex == 1)
+			{
+				lcd.setCursor(0, 0);
+				lcd.print("T3: ---");
+				lcd.setCursor(0, 1);
+				lcd.print("T4: ---");
+			} else if (tempIndex == 2)
+			{
+				lcd.setCursor(0, 0);
+				lcd.print("T5: ---");
+				lcd.setCursor(0, 1);
+				lcd.print("T6: ---");
+			} else if (tempIndex == 3)
+			{
+				lcd.setCursor(0, 0);
+				lcd.print("T7: ---");
+				lcd.setCursor(0, 1);
+				lcd.print("T8: ---");
+			}
+
+
+
+			// LCD temperature output
+			// lcd.setCursor(4, 0);
+			// lcd.print(tempBuffer[tempIndex]);
+			// lcd.write(byte(0));
+			// lcd.print("C");
+		}
+		delay(50);
+	}
+
+	lcdButtonLastState = lcdButtonState;
   Serial.println("");
 	delay(500);
 }
