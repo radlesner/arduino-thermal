@@ -2,7 +2,7 @@
 	Used pins for Arduino Nano:
 		D9 = Temperature sensor pin
 		D8 = LCD RS
-		D7 = LCD RW (Currently not user)
+		D7 = LCD RW (Currently not used)
 		D6 = LCD E
 		D5 = LCD Data (D4)
 		D4 = LCD Data (D5)
@@ -26,12 +26,7 @@ const int
 	d7 = 2;
 
 int sensorCount = 0;
-
 float tempC;
-
-OneWire oneWire(tempSensorPin);
-DallasTemperature sensors(&oneWire);
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 byte degreeChar [8] = {
 	0b00010,
@@ -43,6 +38,10 @@ byte degreeChar [8] = {
 	0b00000,
 	0b00000,
 };
+
+OneWire oneWire(tempSensorPin);
+DallasTemperature sensors(&oneWire);
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 void degreeSerialSymbol() {
 	if (Serial)
